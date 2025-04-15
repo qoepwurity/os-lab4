@@ -10,8 +10,6 @@
 #define STACK_SIZE  8192
 #define MAX_THREAD  4
 
-void mythread(void);
-
 typedef struct thread thread_t, *thread_p;
 typedef struct mutex mutex_t, *mutex_p;
 
@@ -93,7 +91,7 @@ thread_create(void (*func)())
   }
     t->sp = (int) (t->stack + STACK_SIZE);   // set sp to the top of the stack
     t->sp -= 4;                              // space for return address
-    *(void **)(t->sp) = func;
+    * (int *) (t->sp) = (int)func;
     t->sp -= 32;                             // space for registers that thread_switch expects
     t->state = RUNNABLE;  
     check_counter(+1);
