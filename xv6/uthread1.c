@@ -23,7 +23,7 @@ thread_p  current_thread;
 thread_p  next_thread;
 extern void thread_switch(void);
 extern void thread_schedule(void);
-
+// this change
 void 
 thread_init(void)
 {
