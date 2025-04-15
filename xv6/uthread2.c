@@ -61,7 +61,7 @@ thread_schedule(void)
 void 
 thread_init(void)
 {
-  uthread_init(thread_schedule);
+  uthread_init((int)thread_schedule);
 
   // main() is thread 0, which will make the first invocation to
   // thread_schedule().  it needs a stack so that the first thread_switch() can
@@ -85,8 +85,9 @@ thread_create(void (*func)())
   t->sp = (int) (t->stack + STACK_SIZE);   // set sp to the top of the stack
   t->sp -= 4;                              // space for return address
   /* 
-    set tid and ptid
+    set tid and ptid 부모 스레드와 자식 스레드 명시시
   */
+  
   * (int *) (t->sp) = (int)func;           // push return address on stack
   t->sp -= 32;                             // space for registers that thread_switch expects
   t->state = RUNNABLE;
@@ -96,7 +97,7 @@ static void
 thread_join_all(void)
 {
   /*
-    it returns when all child threads have exited.
+    it returns when all child threads have exited. 자식 스레드가 끝날 때까지 부모 스레드 대기
   */
 }
 
@@ -125,7 +126,7 @@ mythread(void)
   current_thread->state = FREE;
 }
 
-
+// a
 int 
 main(int argc, char *argv[]) 
 {
