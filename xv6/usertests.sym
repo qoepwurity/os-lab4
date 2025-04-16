@@ -36,7 +36,6 @@
 000084e0 uninit
 00002cc5 dirfile
 00004028 write
-000040b0 check_counter
 000036e7 bsstest
 00006488 echoargv
 00004060 fstat
@@ -47,6 +46,7 @@
 0000096e exectest
 00004040 exec
 00004010 wait
+000040b0 check_thread
 00003c6d rand
 00004020 read
 00000baa preempt

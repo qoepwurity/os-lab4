@@ -94,7 +94,7 @@ thread_create(void (*func)())
     * (int *) (t->sp) = (int)func;
     t->sp -= 32;                             // space for registers that thread_switch expects
     t->state = RUNNABLE;  
-    check_counter(+1);
+    check_thread(+1);
 }
 
 void 
@@ -108,7 +108,7 @@ mythread(void)
   printf(1, "my thread: exit\n");
   current_thread->state = FREE;
 
-  check_counter(-1);
+  check_thread(-1);
   thread_schedule();
 }
 

@@ -652,7 +652,7 @@ SYSCALL(uthread_init)
  44e:	cd 40                	int    $0x40
  450:	c3                   	ret    
 
-00000451 <check_counter>:
+00000451 <check_thread>:
  451:	b8 17 00 00 00       	mov    $0x17,%eax
  456:	cd 40                	int    $0x40
  458:	c3                   	ret    

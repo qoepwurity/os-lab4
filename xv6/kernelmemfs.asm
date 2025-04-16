@@ -9523,7 +9523,7 @@ argstr(int n, char **pp)
 80104d75:	c3                   	ret    
 
 80104d76 <syscall>:
-[SYS_check_counter] sys_check_counter,
+[SYS_check_thread] sys_check_thread,
 };
 
 void
@@ -11462,12 +11462,12 @@ sys_uthread_init(void)
 80105d28:	c9                   	leave  
 80105d29:	c3                   	ret    
 
-80105d2a <sys_check_counter>:
+80105d2a <sys_check_thread>:
 
 
 
 int
-sys_check_counter(void) {
+sys_check_thread(void) {
 80105d2a:	55                   	push   %ebp
 80105d2b:	89 e5                	mov    %esp,%ebp
 80105d2d:	83 ec 18             	sub    $0x18,%esp
@@ -11480,15 +11480,15 @@ sys_check_counter(void) {
 80105d39:	e8 6c ef ff ff       	call   80104caa <argint>
 80105d3e:	83 c4 10             	add    $0x10,%esp
 80105d41:	85 c0                	test   %eax,%eax
-80105d43:	79 07                	jns    80105d4c <sys_check_counter+0x22>
+80105d43:	79 07                	jns    80105d4c <sys_check_thread+0x22>
     return -1;
 80105d45:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
-80105d4a:	eb 24                	jmp    80105d70 <sys_check_counter+0x46>
+80105d4a:	eb 24                	jmp    80105d70 <sys_check_thread+0x46>
 
   struct proc* p = myproc();
 80105d4c:	e8 df dc ff ff       	call   80103a30 <myproc>
 80105d51:	89 45 f4             	mov    %eax,-0xc(%ebp)
-  p->check_counter += op;  // +1 또는 -1
+  p->check_thread += op;  // +1 또는 -1
 80105d54:	8b 45 f4             	mov    -0xc(%ebp),%eax
 80105d57:	8b 90 80 00 00 00    	mov    0x80(%eax),%edx
 80105d5d:	8b 45 f0             	mov    -0x10(%ebp),%eax
@@ -11811,7 +11811,7 @@ trap(struct trapframe *tf)
 80106037:	8b 40 7c             	mov    0x7c(%eax),%eax
 8010603a:	85 c0                	test   %eax,%eax
 8010603c:	0f 84 48 01 00 00    	je     8010618a <trap+0x22c>
-      if(p->check_counter >= 2){
+      if(p->check_thread >= 2){
 80106042:	8b 45 e4             	mov    -0x1c(%ebp),%eax
 80106045:	8b 80 80 00 00 00    	mov    0x80(%eax),%eax
 8010604b:	83 f8 01             	cmp    $0x1,%eax

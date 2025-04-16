@@ -2051,7 +2051,7 @@ SYSCALL(uthread_init)
      f7d:	cd 40                	int    $0x40
      f7f:	c3                   	ret    
 
-00000f80 <check_counter>:
+00000f80 <check_thread>:
      f80:	b8 17 00 00 00       	mov    $0x17,%eax
      f85:	cd 40                	int    $0x40
      f87:	c3                   	ret    

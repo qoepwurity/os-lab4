@@ -95,26 +95,20 @@ thread_create(void (*func)())
   }
   t->sp = (int) (t->stack + STACK_SIZE);   // set sp to the top of the stack
   t->sp -= 4;                              // space for return address
-  /* 
-    set tid and ptid 부모 스레드와 자식 스레드 명시
-  */
+  
+  
   t->tid = t - all_thread;
   t->ptid = current_thread->tid;
   
   * (int *) (t->sp) = (int)func;           // push return address on stack
   t->sp -= 32;                             // space for registers that thread_switch expects
   t->state = RUNNABLE;
-  check_counter(+1);
-  printf(1, "thread_create: tid=%d ptid=%d func=0x%x *ret=0x%x\n",
-    t->tid, t->ptid, (int)func, *(int *)(t->sp));
+  check_thread(+1);
 }
 
 static void 
 thread_join_all(void)
 {
-  /*
-    it returns when all child threads have exited. 자식 스레드가 끝날 때까지 부모 스레드 대기
-  */
  while (1) {
     int found = 0;
     for (int i = 0; i < MAX_THREAD; i++) {
@@ -171,7 +165,6 @@ child_thread(void)
     printf(1, "child thread 0x%x\n", (int) current_thread);
   }
   printf(1, "child thread: exit\n");
-  //current_thread->state = FREE;
 
   for (int i = 0; i < MAX_THREAD; i++) {
     thread_p p = &all_thread[i];
@@ -183,7 +176,7 @@ child_thread(void)
 
   current_thread->state = FREE;
 
-  check_counter(-1);
+  check_thread(-1);
   wake_pthread();
   thread_schedule();
 }
@@ -201,7 +194,7 @@ mythread(void)
   printf(1, "my thread: exit\n");
   current_thread->state = FREE;
 
-  check_counter(-1);
+  check_thread(-1);
   thread_schedule();
 }
 

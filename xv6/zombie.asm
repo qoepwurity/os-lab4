@@ -541,7 +541,7 @@ SYSCALL(uthread_init)
  328:	cd 40                	int    $0x40
  32a:	c3                   	ret    
 
-0000032b <check_counter>:
+0000032b <check_thread>:
  32b:	b8 17 00 00 00       	mov    $0x17,%eax
  330:	cd 40                	int    $0x40
  332:	c3                   	ret    

@@ -213,10 +213,10 @@ thread_create(void (*func)())
  1a6:	8b 45 f4             	mov    -0xc(%ebp),%eax
  1a9:	c7 80 04 20 00 00 02 	movl   $0x2,0x2004(%eax)
  1b0:	00 00 00 
-    check_counter(+1);
+    check_thread(+1);
  1b3:	83 ec 0c             	sub    $0xc,%esp
  1b6:	6a 01                	push   $0x1
- 1b8:	e8 ea 03 00 00       	call   5a7 <check_counter>
+ 1b8:	e8 ea 03 00 00       	call   5a7 <check_thread>
  1bd:	83 c4 10             	add    $0x10,%esp
 }
  1c0:	c9                   	leave  
@@ -264,10 +264,10 @@ mythread(void)
  21c:	c7 80 04 20 00 00 00 	movl   $0x0,0x2004(%eax)
  223:	00 00 00 
 
-  check_counter(-1);
+  check_thread(-1);
  226:	83 ec 0c             	sub    $0xc,%esp
  229:	6a ff                	push   $0xffffffff
- 22b:	e8 77 03 00 00       	call   5a7 <check_counter>
+ 22b:	e8 77 03 00 00       	call   5a7 <check_thread>
  230:	83 c4 10             	add    $0x10,%esp
   thread_schedule();
  233:	e8 fb fd ff ff       	call   33 <thread_schedule>
@@ -854,7 +854,7 @@ SYSCALL(uthread_init)
  5a4:	cd 40                	int    $0x40
  5a6:	c3                   	ret    
 
-000005a7 <check_counter>:
+000005a7 <check_thread>:
  5a7:	b8 17 00 00 00       	mov    $0x17,%eax
  5ac:	cd 40                	int    $0x40
  5ae:	c3                   	ret    

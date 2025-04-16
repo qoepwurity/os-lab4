@@ -19,12 +19,12 @@
 000004a4 sleep
 00000424 pipe
 00000434 write
-000004bc check_counter
 0000046c fstat
 00000444 kill
 00000484 chdir
 0000044c exec
 0000041c wait
+000004bc check_thread
 0000042c read
 00000464 unlink
 00000000 wc

@@ -7016,7 +7016,7 @@ SYSCALL(uthread_init)
     40ad:	cd 40                	int    $0x40
     40af:	c3                   	ret    
 
-000040b0 <check_counter>:
+000040b0 <check_thread>:
     40b0:	b8 17 00 00 00       	mov    $0x17,%eax
     40b5:	cd 40                	int    $0x40
     40b7:	c3                   	ret    

@@ -622,7 +622,7 @@ SYSCALL(uthread_init)
  3fd:	cd 40                	int    $0x40
  3ff:	c3                   	ret    
 
-00000400 <check_counter>:
+00000400 <check_thread>:
  400:	b8 17 00 00 00       	mov    $0x17,%eax
  405:	cd 40                	int    $0x40
  407:	c3                   	ret    

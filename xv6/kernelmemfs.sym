@@ -172,7 +172,6 @@
 80105b69 sys_fork
 8018d000 bcache
 80106a7c vector172
-80105d2a sys_check_counter
 80106db8 vector241
 801047c9 getcallerpcs
 801057de sys_mkdir
@@ -239,6 +238,7 @@
 8010647e vector16
 80196e80 mac_addr
 8010000c wait_main
+80105d2a sys_check_thread
 80191960 input
 80106dac vector240
 80108e27 arp_broadcast

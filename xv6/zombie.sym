@@ -19,12 +19,12 @@
 00000313 sleep
 00000293 pipe
 000002a3 write
-0000032b check_counter
 000002db fstat
 000002b3 kill
 000002f3 chdir
 000002bb exec
 0000028b wait
+0000032b check_thread
 0000029b read
 000002d3 unlink
 0000027b fork

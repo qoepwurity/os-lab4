@@ -104,13 +104,13 @@ sys_uthread_init(void)
 
 
 int
-sys_check_counter(void) {
+sys_check_thread(void) {
   int op;
   if (argint(0, &op) < 0)  // 사용자로부터 인자 하나 받음
     return -1;
 
   struct proc* p = myproc();
-  p->check_counter += op;  // +1 또는 -1
+  p->check_thread += op;  // +1 또는 -1
 
   return 0;
 }

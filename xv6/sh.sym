@@ -31,7 +31,6 @@
 00000ee8 pipe
 0000024b getcmd
 00000ef8 write
-00000f80 check_counter
 00000f30 fstat
 00000f08 kill
 00000f48 chdir
@@ -41,6 +40,7 @@
 00000f10 exec
 00000ee0 wait
 00001994 symbols
+00000f80 check_thread
 00000ef0 read
 00000a52 parseexec
 00000f28 unlink
