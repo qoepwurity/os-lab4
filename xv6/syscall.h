@@ -23,3 +23,7 @@
 
 #define SYS_uthread_init  22 // 이거 추가
 #define SYS_check_thread 23
+
+#define SYS_getpinfo 24
+#define SYS_setSchedPolicy 25
+#define SYS_yield 26

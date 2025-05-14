@@ -1,3 +1,5 @@
+#include "pstat.h"
+
 struct stat;
 struct rtcdate;
 
@@ -26,6 +28,10 @@ int uptime(void);
 
 int uthread_init(int address);
 int check_thread(int op);
+
+int setSchedPolicy(int policy);
+int getpinfo(struct pstat* ps);
+int yield(void);
 
 // ulib.c
 int stat(char*, struct stat*);

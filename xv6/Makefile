@@ -204,6 +204,9 @@ UPROGS=\
 	_uthread1\
 	_uthread2\
 	_uthread3\
+	_test_sched\
+	_test_yield_sched\
+	_mlfq3\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
