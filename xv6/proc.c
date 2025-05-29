@@ -76,6 +76,7 @@ myproc(void)
   return p;
 }
 
+//이거이거
 // PAGEBREAK: 32
 //  Look in the process table for an UNUSED proc.
 //  If found, change state to EMBRYO and initialize
@@ -246,6 +247,7 @@ int fork(void)
   return pid;
 }
 
+//이거이거 살짝
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
@@ -345,6 +347,7 @@ int wait(void)
   }
 }
 
+//이거이거거
 // PAGEBREAK: 42
 //  Per-CPU process scheduler.
 //  Each CPU calls scheduler() after setting itself up.
@@ -361,6 +364,7 @@ void scheduler(void)
 
   for (;;) {
     sti(); // Enable interrupts
+    
     acquire(&ptable.lock);
 
     int policy = c->sched_policy;
@@ -470,6 +474,7 @@ void sched(void)
   mycpu()->intena = intena;
 }
 
+// 이거이거거
 // Give up the CPU for one scheduling round.
 void yield(void)
 {
@@ -624,4 +629,13 @@ void procdump(void)
     }
     cprintf("\n");
   }
+}
+
+struct proc* find_proc_by_pid(int pid) {
+  struct proc *p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if(p->pid == pid)
+      return p;
+  }
+  return 0;
 }

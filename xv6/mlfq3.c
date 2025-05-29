@@ -2,8 +2,10 @@
 #include "user.h"
 #include "pstat.h"
 
+struct pstat global_st;
+
 int workload(int n) {
-  volatile int i, j = 0;
+  int i, j = 0;
   for (i = 0; i < n; i++)
     j = j * i + 1;
   return j;
@@ -42,49 +44,55 @@ void print_proc_info(struct pstat *st, int *child_pid, int count, const char *ti
   }
 }
 
-//tleh
-// tick을 1 증가시키는 workload 단위 측정 함수
 int measure_workload_unit() {
-  struct pstat st;
+  struct pstat *st = &global_st;
   int pid = getpid(), t0 = -1, t1 = -1;
+  int level = 3;
 
-  for (int n = 10000; n <= 300000; n += 5000) {
-    getpinfo(&st);
-    t0 = -1;
-
+  // ⏱ 프로세스가 ptable에 등록될 때까지 대기
+  while (1) {
+    getpinfo(st);
+    int found = 0;
     for (int i = 0; i < NPROC; i++) {
-      if (st.inuse[i] && st.pid[i] == pid) {
-        t0 = st.ticks[i][3];
+      if (st->inuse[i] && st->pid[i] == pid) {
+        found = 1;
+        break;
+      }
+    }
+    if (found) break;
+    sleep(1);  // 잠깐 대기
+  }
+
+  for (int n = 1000000; n <= 50000000; n += 50000) {
+    getpinfo(st);
+    for (int i = 0; i < NPROC; i++) {
+      if (st->inuse[i] && st->pid[i] == pid) {
+        level = st->priority[i];
+        t0 = st->ticks[i][level];
         break;
       }
     }
 
-    if (t0 < 0) {
-      printf(1, "❌ t0 not found at n=%d\n", n);
-      continue;
-    }
+    if (t0 < 0) continue;
 
-    volatile int tmp = workload(n);
-    tmp += 0;
-    sleep(10);  // 충분히 tick 반영 시간 확보
+    workload(n);
+    sleep(5);
 
-    getpinfo(&st);
-    t1 = -1;
+    getpinfo(st);
     for (int i = 0; i < NPROC; i++) {
-      if (st.inuse[i] && st.pid[i] == pid) {
-        t1 = st.ticks[i][3];
+      if (st->inuse[i] && st->pid[i] == pid) {
+        t1 = st->ticks[i][level];
         break;
       }
     }
 
-    if (t1 < 0) continue;
     if (t1 > t0) {
-      printf(1, "✅ workload(%d) → tick 증가 (%d → %d)\n", n, t0, t1);
+      printf(1, "✅ workload(%d) → tick 증가 (Q%d, %d → %d)\n", n, level, t0, t1);
       return n;
     }
   }
 
-  printf(1, "❌ tick 증가 확인 실패 (n 범위 초과)\n");
+  printf(1, "❌ tick 증가 확인 실패\n");
   return -1;
 }
 
@@ -95,9 +103,12 @@ int main(void) {
   int i, pid;
   int child_pid[4];
   int workload_unit = 4000000;
-  //int tick_unit = measure_workload_unit();  // workload 단위 측정
+  int tick_unit = measure_workload_unit();  // workload 단위 측정
 
-  //if (tick_unit < 0) exit();
+  if (tick_unit <= 0) {
+    printf(1, "❌ workload_unit 측정 실패 또는 너무 작음. 기본값 100000 사용\n");
+    tick_unit = 4000000;
+  } else measure_workload_unit();
 
   setSchedPolicy(3);
   printf(1, "✅ setSchedPolicy(3) 적용 완료\n");
@@ -107,7 +118,7 @@ int main(void) {
     if (pid < 0) {
       printf(1, "❌ fork failed at i = %d\n", i);
     } else if (pid == 0) {
-      sleep(300);
+      sleep(500);
       printf(1, "Child index %d | pid %d\n", i, getpid());
 
       if (i < 2) {
@@ -133,7 +144,7 @@ int main(void) {
   print_proc_info(&st, child_pid, 4, "초기 상태");
 
   // ⏱ 중간 상태 확인
-  sleep(1);
+  sleep(2);
   getpinfo(&st);
   print_proc_info(&st, child_pid, 4, "중간 상태");
 

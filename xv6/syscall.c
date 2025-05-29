@@ -109,6 +109,7 @@ extern int sys_check_thread(void);
 extern int sys_getpinfo(void);
 extern int sys_setSchedPolicy(void);
 extern int sys_yield(void);
+extern int sys_printpt(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -137,6 +138,7 @@ static int (*syscalls[])(void) = {
 [SYS_getpinfo]  sys_getpinfo,
 [SYS_setSchedPolicy]  sys_setSchedPolicy,
 [SYS_yield]    sys_yield,
+[SYS_printpt] sys_printpt,
 };
 
 void

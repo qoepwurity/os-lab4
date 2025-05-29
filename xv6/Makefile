@@ -206,7 +206,10 @@ UPROGS=\
 	_uthread3\
 	_test_sched\
 	_test_yield_sched\
+	_test\
 	_mlfq3\
+	_testmlfq2\
+	_recurse\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

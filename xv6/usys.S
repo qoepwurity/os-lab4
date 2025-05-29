@@ -36,3 +36,5 @@ SYSCALL(check_thread)
 SYSCALL(getpinfo)
 SYSCALL(setSchedPolicy)
 SYSCALL(yield)
+
+SYSCALL(printpt)

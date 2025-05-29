@@ -27,3 +27,5 @@
 #define SYS_getpinfo 24
 #define SYS_setSchedPolicy 25
 #define SYS_yield 26
+
+#define SYS_printpt 27

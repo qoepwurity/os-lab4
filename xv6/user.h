@@ -33,6 +33,8 @@ int setSchedPolicy(int policy);
 int getpinfo(struct pstat* ps);
 int yield(void);
 
+int printpt(int pid);
+
 // ulib.c
 int stat(char*, struct stat*);
 char* strcpy(char*, char*);

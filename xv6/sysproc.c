@@ -13,6 +13,10 @@ extern int proc_priority[NPROC];
 extern int proc_ticks[NPROC][4];
 extern int proc_wait_ticks[NPROC][4];
 
+struct proc* find_proc_by_pid(int pid);
+void print_user_page_table(struct proc *p);
+pte_t *walkpgdir(pde_t *pgdir, const void *va, int alloc);
+
 extern struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -156,11 +160,11 @@ sys_setSchedPolicy(void) {
   if (argint(0, &policy) < 0)
     return -1;
   
-  pushcli();  // ✅ 인터럽트 끄기 (mycpu 안전하게 호출하려면 필요)
+  pushcli();
   mycpu()->sched_policy = policy;
-  popcli();   // ✅ 다시 인터럽트 복원
+  popcli();
 
-  cprintf("✅ sched_policy set to %d\n", policy);  // 💬 확인 로그!
+  cprintf("✅ sched_policy set to %d\n", policy);
   return 0;
 }
 
@@ -168,5 +172,37 @@ int
 sys_yield(void)
 {
   yield();
+  return 0;
+}
+
+void 
+print_user_page_table(struct proc *p) {
+  cprintf("START PAGE TABLE (pid %d)\n", p->pid);
+  pde_t *pgdir = p->pgdir;
+  for(uint va = 0; va < KERNBASE; va += PGSIZE) {
+    pte_t *pte = walkpgdir(pgdir, (void*)va, 0);
+    if(!pte)
+      continue;
+    if(!(*pte & PTE_P))
+      continue;
+    // 페이지 번호 = va / PGSIZE
+    int vpn = va / PGSIZE;
+    char uork = (*pte & PTE_U) ? 'U' : 'K';
+    char w = (*pte & PTE_W) ? 'W' : '-';
+    uint ppn = PTE_ADDR(*pte) >> 12; // 물리 페이지 번호
+    cprintf("%d P %c %c %x\n", vpn, uork, w, ppn);
+  }
+  cprintf("END PAGE TABLE\n");
+}
+
+int 
+sys_printpt(void) {
+  int pid;
+  if(argint(0, &pid) < 0)
+    return -1;
+  struct proc *p = find_proc_by_pid(pid); // 아래에 별도 구현
+  if(!p)
+    return -1;
+  print_user_page_table(p); // 별도 구현
   return 0;
 }
