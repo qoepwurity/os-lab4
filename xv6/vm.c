@@ -306,7 +306,7 @@ freevm(pde_t *pgdir)
 }
 
 // Clear PTE_U on a page. Used to create an inaccessible
-// page beneath the user stack.
+// page beneath the user stack. 유저 스택 아래에, 접근 불가 페이지 생성.
 void
 clearpteu(pde_t *pgdir, char *uva)
 {
