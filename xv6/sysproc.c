@@ -65,8 +65,8 @@ sys_sbrk(void)
 
   if(argint(0, &n) < 0)
     return -1;
-  addr = myproc()->sz;
-  if(growproc(n) < 0)
+  addr = myproc()->sz;  // current heap size
+  if(growproc(n) < 0)   // heap size 늘림. 현재는 heap만 늘림?
     return -1;
   return addr;
 }
