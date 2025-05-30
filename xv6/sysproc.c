@@ -69,15 +69,6 @@ sys_sbrk(void)
   if(growproc(n) < 0)   // heap size 늘림. 현재는 heap만 늘림?
     return -1;
   return addr;
-}
-
-int
-sys_sleep(void)
-{
-  int n;
-  uint ticks0;
-
-  if(argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
   ticks0 = ticks;

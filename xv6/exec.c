@@ -62,12 +62,13 @@ exec(char *path, char **argv)
 
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
-  sz = PGROUNDUP(sz);
-  sp = KERNBASE;
-  if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
+  sz = PGROUNDUP(sz);   // 페이지 단위로 올림 (((sz)+PGSIZE-1) & ~(PGSIZE-1))
+  sp = KERNBASE;        // 커넬 공간 start 지점
+  if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)  // 페이지 사이즈 2배 할당. 실패 시 0 or error 발생
     goto bad;
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
+  // 스택 확장 기능이 없음.
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
