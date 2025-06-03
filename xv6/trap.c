@@ -11,45 +11,49 @@
 
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
-extern uint vectors[];  // in vectors.S: array of 256 entry pointers
+extern uint vectors[]; // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
 
-void
-tvinit(void)
+pte_t *walkpgdir(pde_t *pgdir, const void *va, int alloc);
+int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+
+void tvinit(void)
 {
   int i;
 
-  for(i = 0; i < 256; i++)
-    SETGATE(idt[i], 0, SEG_KCODE<<3, vectors[i], 0);
-  SETGATE(idt[T_SYSCALL], 1, SEG_KCODE<<3, vectors[T_SYSCALL], DPL_USER);
+  for (i = 0; i < 256; i++)
+    SETGATE(idt[i], 0, SEG_KCODE << 3, vectors[i], 0);
+  SETGATE(idt[T_SYSCALL], 1, SEG_KCODE << 3, vectors[T_SYSCALL], DPL_USER);
 
   initlock(&tickslock, "time");
 }
 
-void
-idtinit(void)
+void idtinit(void)
 {
   lidt(idt, sizeof(idt));
 }
 
-//PAGEBREAK: 41
-void
-trap(struct trapframe *tf)
+// PAGEBREAK: 41
+void trap(struct trapframe *tf)
 {
-  if(tf->trapno == T_SYSCALL){
-    if(myproc()->killed)
+  struct proc *p = myproc();
+  if (tf->trapno == T_SYSCALL)
+  {
+    if (myproc()->killed)
       exit();
     myproc()->tf = tf;
     syscall();
-    if(myproc()->killed)
+    if (myproc()->killed)
       exit();
     return;
   }
 
-  switch(tf->trapno){
+  switch (tf->trapno)
+  {
   case T_IRQ0 + IRQ_TIMER:
-    if(cpuid() == 0){
+    if (cpuid() == 0)
+    {
       acquire(&tickslock);
       ticks++;
       wakeup(&ticks);
@@ -57,21 +61,21 @@ trap(struct trapframe *tf)
     }
     lapiceoi();
 
-    // 🔥 유저모드 + scheduler 설정된 경우만 실행
-    struct proc *p = myproc();
-    if (p && p->state == RUNNING && p->scheduler) {
-      if(p->check_thread >= 2){
+    // 유저모드 + scheduler 설정된 경우만 실행
+    if (p && p->state == RUNNING && p->scheduler)
+    {
+      if (p->check_thread >= 2)
+      {
         p->tf->eip = p->scheduler;
       }
     }
-    
 
     break;
   case T_IRQ0 + IRQ_IDE:
     ideintr();
     lapiceoi();
     break;
-  case T_IRQ0 + IRQ_IDE+1:
+  case T_IRQ0 + IRQ_IDE + 1:
     // Bochs generates spurious IDE1 interrupts.
     break;
   case T_IRQ0 + IRQ_KBD:
@@ -92,9 +96,57 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
 
-  //PAGEBREAK: 13
+    // case T_PGFLT: // 페이지 폴트 처리 케이스
+    //   uint va = PGROUNDDOWN(rcr2());
+    //   char *mem = kalloc();
+    //   if (mem == 0)
+    //   {
+    //     cprintf("allocuvm out of memory\n");
+    //     break;
+    //   }
+    //   memset(mem, 0, PGSIZE);
+    //   mappages(myproc()->pgdir, (char *)va, PGSIZE, V2P(mem), PTE_W | PTE_U | PTE_P);
+    //   walkpgdir(myproc()->pgdir, (char *)va, 0);
+    //   lcr3(V2P(myproc()->pgdir));
+    //   break;
+
+  case T_PGFLT:
+    uint va = PGROUNDDOWN(rcr2());
+
+    // [추가] 유효 주소 체크 (heap, stack 등만 허용)
+    if (/*va >= p->sz ||*/ va >= KERNBASE || va < PGSIZE) {
+      cprintf("trap: kill! va=%x sz=%x\n", va, p->sz);  
+      p->killed = 1;
+      break;
+    }
+
+    pte_t *pte = walkpgdir(p->pgdir, (char *)va, 0);
+    if (pte && (*pte & PTE_P)) {
+        p->killed = 1;
+        break;
+    }
+
+    char *mem = kalloc();
+    if (mem == 0) {
+        cprintf("allocuvm out of memory\n");
+        p->killed = 1;
+        break;
+    }
+    memset(mem, 0, PGSIZE);
+    if (mappages(p->pgdir, (char *)va, PGSIZE, V2P(mem), PTE_W | PTE_U) < 0) {
+        kfree(mem);
+        p->killed = 1;
+        break;
+    }
+    lcr3(V2P(p->pgdir)); // TLB flush
+    break;
+
+
+
+  // PAGEBREAK: 13
   default:
-    if(myproc() == 0 || (tf->cs&3) == 0){
+    if (myproc() == 0 || (tf->cs & 3) == 0)
+    {
       // In kernel, it must be our mistake.
       cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
               tf->trapno, cpuid(), tf->eip, rcr2());
@@ -111,16 +163,16 @@ trap(struct trapframe *tf)
   // Force process exit if it has been killed and is in user space.
   // (If it is still executing in the kernel, let it keep running
   // until it gets to the regular system call return.)
-  if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
+  if (myproc() && myproc()->killed && (tf->cs & 3) == DPL_USER)
     exit();
 
   // Force process to give up CPU on clock tick.
   // If interrupts were on while locks held, would need to check nlock.
-  if(myproc() && myproc()->state == RUNNING &&
-     tf->trapno == T_IRQ0+IRQ_TIMER)
+  if (myproc() && myproc()->state == RUNNING &&
+      tf->trapno == T_IRQ0 + IRQ_TIMER)
     yield();
 
   // Check if the process has been killed since we yielded
-  if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
+  if (myproc() && myproc()->killed && (tf->cs & 3) == DPL_USER)
     exit();
 }

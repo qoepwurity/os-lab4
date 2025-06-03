@@ -210,6 +210,7 @@ UPROGS=\
 	_mlfq3\
 	_testmlfq2\
 	_recurse\
+	_lazytest\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

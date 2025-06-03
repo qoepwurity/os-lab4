@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     printf(1, "Usage: %s levels\n", argv[0]);
     exit();
   }
-  // printpt(getpid()); // Uncomment for the test.
+  printpt(getpid()); // Uncomment for the test.
   n = atoi(argv[1]);
   printf(1, "Recursing %d levels\n", n);
   m = recurse(n);
