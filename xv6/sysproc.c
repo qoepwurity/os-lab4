@@ -57,19 +57,40 @@ sys_getpid(void)
   return myproc()->pid;
 }
 
-int
-sys_sbrk(void)
-{
+// int
+// sys_sbrk(void)
+// {
+//   int addr;
+//   int n;
+
+//   if(argint(0, &n) < 0)
+//     return -1;
+//   addr = myproc()->sz;
+//   if(growproc(n) < 0)
+//     return -1;
+//   return addr;
+// }
+
+int sys_sbrk(void) {
   int addr;
   int n;
+  struct proc *curproc = myproc();
 
-  if(argint(0, &n) < 0)
+  if (argint(0, &n) < 0)
     return -1;
-  addr = myproc()->sz;
-  if(growproc(n) < 0)
-    return -1;
+  addr = curproc->sz;
+
+  if(n < 0){
+    if(deallocuvm(curproc->pgdir, addr, addr + n) == 0)
+      return -1;
+  }
+
+  curproc->sz += n;
+
   return addr;
 }
+
+
 
 int
 sys_sleep(void)

@@ -96,52 +96,60 @@ void trap(struct trapframe *tf)
     lapiceoi();
     break;
 
-    // case T_PGFLT: // 페이지 폴트 처리 케이스
-    //   uint va = PGROUNDDOWN(rcr2());
-    //   char *mem = kalloc();
-    //   if (mem == 0)
-    //   {
-    //     cprintf("allocuvm out of memory\n");
-    //     break;
-    //   }
-    //   memset(mem, 0, PGSIZE);
-    //   mappages(myproc()->pgdir, (char *)va, PGSIZE, V2P(mem), PTE_W | PTE_U | PTE_P);
-    //   walkpgdir(myproc()->pgdir, (char *)va, 0);
-    //   lcr3(V2P(myproc()->pgdir));
-    //   break;
-
   case T_PGFLT:
     uint va = PGROUNDDOWN(rcr2());
 
-    // [추가] 유효 주소 체크 (heap, stack 등만 허용)
-    if (/*va >= p->sz ||*/ va >= KERNBASE || va < PGSIZE) {
-      cprintf("trap: kill! va=%x sz=%x\n", va, p->sz);  
+    if (!p)
+      break;
+
+    if (va >= KERNBASE || (p->sz == 0))
+    {
+      // 커널 영역, 혹은 전체 해제된 경우: 접근 금지
       p->killed = 1;
       break;
     }
 
+    // pte_t *pte = walkpgdir(p->pgdir, (char *)va, 0);
+    // if (pte && (*pte & PTE_P)) {
+    //     p->killed = 1;
+    //     break;
+    // }
+
+    // pte_t *pte = walkpgdir(p->pgdir, (char *)va, 0);
+    // if (!pte || (*pte & PTE_P)) {
+    //     p->killed = 1;
+    //     break;
+    // }
+
     pte_t *pte = walkpgdir(p->pgdir, (char *)va, 0);
-    if (pte && (*pte & PTE_P)) {
-        p->killed = 1;
-        break;
+    if (!pte)
+    {
+      p->killed = 1;
+      break;
+    }
+    if (*pte & PTE_P)
+    {
+      p->killed = 1;
+      break;
     }
 
     char *mem = kalloc();
-    if (mem == 0) {
-        cprintf("allocuvm out of memory\n");
-        p->killed = 1;
-        break;
+    if (mem == 0)
+    {
+      cprintf("allocuvm out of memory\n");
+      p->killed = 1;
+      break;
     }
     memset(mem, 0, PGSIZE);
-    if (mappages(p->pgdir, (char *)va, PGSIZE, V2P(mem), PTE_W | PTE_U) < 0) {
-        kfree(mem);
-        p->killed = 1;
-        break;
+    if (mappages(p->pgdir, (char *)va, PGSIZE, V2P(mem), PTE_W | PTE_U) < 0)
+    {
+      kfree(mem);
+      p->killed = 1;
+      break;
     }
+
     lcr3(V2P(p->pgdir)); // TLB flush
     break;
-
-
 
   // PAGEBREAK: 13
   default:

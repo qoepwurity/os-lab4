@@ -8,7 +8,7 @@
 #include "spinlock.h"
 #include "debug.h"
 
-#define GUARD_SIZE (8*PGSIZE)
+#define GUARD_SIZE (8 * PGSIZE)
 #define USERSTACKTOP (KERNBASE - GUARD_SIZE)
 
 int proc_priority[NPROC];
@@ -79,12 +79,12 @@ myproc(void)
   return p;
 }
 
-//이거이거
-// PAGEBREAK: 32
-//  Look in the process table for an UNUSED proc.
-//  If found, change state to EMBRYO and initialize
-//  state required to run in the kernel.
-//  Otherwise return 0.
+// 이거이거
+//  PAGEBREAK: 32
+//   Look in the process table for an UNUSED proc.
+//   If found, change state to EMBRYO and initialize
+//   state required to run in the kernel.
+//   Otherwise return 0.
 static struct proc *
 allocproc(void)
 {
@@ -160,12 +160,11 @@ void userinit(void)
   if (p->sz > USERSTACKTOP - PGSIZE)
     panic("userinit: stack/heap overlap");
 
-  cprintf("sz: %x, USERSTACKTOP-PGSIZE: %x, USERSTACKTOP: %x\n", p->sz, USERSTACKTOP-PGSIZE, USERSTACKTOP);
+  cprintf("sz: %x, USERSTACKTOP-PGSIZE: %x, USERSTACKTOP: %x\n", p->sz, USERSTACKTOP - PGSIZE, USERSTACKTOP);
 
-
-  if(allocuvm(p->pgdir, USERSTACKTOP - 2*PGSIZE, USERSTACKTOP) == 0)
+  if (allocuvm(p->pgdir, USERSTACKTOP - 2 * PGSIZE, USERSTACKTOP) == 0)
     panic("userinit: allocuvm fail");
-  
+
   memset(p->tf, 0, sizeof(*p->tf));
   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
   p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
@@ -173,7 +172,7 @@ void userinit(void)
   p->tf->ss = p->tf->ds;
   p->tf->eflags = FL_IF;
   p->tf->esp = USERSTACKTOP - 4;
-  //p->tf->esp = PGSIZE;
+  // p->tf->esp = PGSIZE;
 
   p->tf->eip = 0; // beginning of initcode.S
 
@@ -193,51 +192,38 @@ void userinit(void)
   release(&ptable.lock);
 
   cprintf("userinit: eip=%x esp=%x sz=%x\n", p->tf->eip, p->tf->esp, p->sz);
-
 }
 
 // Grow current process's memory by n bytes.
 // Return 0 on success, -1 on failure.
-// int growproc(int n)
-// {
-//   uint sz;
-//   struct proc *curproc = myproc();
-
-//   sz = curproc->sz;
-//   if (n > 0)
-//   {
-//     if ((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
-//       return -1;
-//   }
-//   else if (n < 0)
-//   {
-//     if ((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
-//       return -1;
-//   }
-//   curproc->sz = sz;
-//   switchuvm(curproc);
-//   return 0;
-// }
-
-int
-growproc(int n)
-{
-  uint sz;
+int growproc(int n){
   struct proc *curproc = myproc();
+  uint sz = curproc->sz;
 
-  sz = curproc->sz;
-  if (n > 0) {
-    sz = sz + n;    // sz만 증가
-  } else if (n < 0) {
-    sz = deallocuvm(curproc->pgdir, sz, sz + n);
-    if (sz == 0)
-      return -1;
+  if (n > 0)
+  {
+    sz += n;
+  }
+  else if (n < 0)
+  {
+    int sz_signed = (int)sz;
+    if (sz_signed + n <= 0)
+    { 
+      deallocuvm(curproc->pgdir, KERNBASE, 0);
+      sz = 0;
+      cprintf("GROWPROC FULL FREE! proc %d sz=%x\n", curproc->pid, sz);
+    }
+    else
+    {
+      sz = deallocuvm(curproc->pgdir, sz, sz + n);
+      if (sz == 0)
+        return -1;
+    }
   }
   curproc->sz = sz;
   switchuvm(curproc);
   return 0;
 }
-
 
 // Create a new process copying p as the parent.
 // Sets up stack to return as if from system call.
@@ -287,10 +273,10 @@ int fork(void)
   return pid;
 }
 
-//이거이거 살짝
-// Exit the current process.  Does not return.
-// An exited process remains in the zombie state
-// until its parent calls wait() to find out it exited.
+// 이거이거 살짝
+//  Exit the current process.  Does not return.
+//  An exited process remains in the zombie state
+//  until its parent calls wait() to find out it exited.
 void exit(void)
 {
   struct proc *curproc = myproc();
@@ -387,32 +373,35 @@ int wait(void)
   }
 }
 
-//이거이거거
-// PAGEBREAK: 42
-//  Per-CPU process scheduler.
-//  Each CPU calls scheduler() after setting itself up.
-//  Scheduler never returns.  It loops, doing:
-//   - choose a process to run
-//   - swtch to start running that process
-//   - eventually that process transfers control
-//       via swtch back to the scheduler.
+// 이거이거거
+//  PAGEBREAK: 42
+//   Per-CPU process scheduler.
+//   Each CPU calls scheduler() after setting itself up.
+//   Scheduler never returns.  It loops, doing:
+//    - choose a process to run
+//    - swtch to start running that process
+//    - eventually that process transfers control
+//        via swtch back to the scheduler.
 void scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
 
-  for (;;) {
+  for (;;)
+  {
     sti(); // Enable interrupts
-    
+
     acquire(&ptable.lock);
 
     int policy = c->sched_policy;
     struct proc *chosen = 0;
 
-    if (policy == 0) {
+    if (policy == 0)
+    {
       // Round-robin scheduling
-      for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+      {
         if (p->state != RUNNABLE)
           continue;
 
@@ -425,13 +414,18 @@ void scheduler(void)
 
         c->proc = 0;
       }
-    } else {
+    }
+    else
+    {
       // MLFQ scheduling
       int level;
-      for (level = 3; level >= 0; level--) {
-        for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      for (level = 3; level >= 0; level--)
+      {
+        for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+        {
           int idx = p - ptable.proc;
-          if (p->state == RUNNABLE && proc_priority[idx] == level) {
+          if (p->state == RUNNABLE && proc_priority[idx] == level)
+          {
             chosen = p;
             goto found;
           }
@@ -439,7 +433,8 @@ void scheduler(void)
       }
 
     found:
-      if (chosen) {
+      if (chosen)
+      {
         int cidx = chosen - ptable.proc;
         c->proc = chosen;
         switchuvm(chosen);
@@ -450,8 +445,8 @@ void scheduler(void)
 
         proc_ticks[cidx][proc_priority[cidx]]++;
 
-        if (proc_ticks[cidx][proc_priority[cidx]] >= (int[]){0,32,16,8}[proc_priority[cidx]]
-            && proc_priority[cidx] > 0) {
+        if (proc_ticks[cidx][proc_priority[cidx]] >= (int[]){0, 32, 16, 8}[proc_priority[cidx]] && proc_priority[cidx] > 0)
+        {
           proc_priority[cidx]--;
           memset(proc_wait_ticks[cidx], 0, sizeof(proc_wait_ticks[cidx]));
         }
@@ -460,22 +455,28 @@ void scheduler(void)
       }
 
       // wait_ticks 증가
-      for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+      {
         int idx = p - ptable.proc;
-        if (p->state == RUNNABLE && p != chosen) {
+        if (p->state == RUNNABLE && p != chosen)
+        {
           proc_wait_ticks[idx][proc_priority[idx]]++;
         }
       }
 
       // Boosting (policy 1, 2만)
-      if (policy != 3) {
-        for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if (policy != 3)
+      {
+        for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+        {
           int idx = p - ptable.proc;
-          if (p->state == RUNNABLE && proc_priority[idx] < 3) {
+          if (p->state == RUNNABLE && proc_priority[idx] < 3)
+          {
             int waited = proc_wait_ticks[idx][proc_priority[idx]];
-            int required = (proc_priority[idx] == 0) ? 500 : 10 * (int[]){0,32,16,8}[proc_priority[idx]];
+            int required = (proc_priority[idx] == 0) ? 500 : 10 * (int[]){0, 32, 16, 8}[proc_priority[idx]];
 
-            if (waited >= required) {
+            if (waited >= required)
+            {
               proc_priority[idx]++;
               memset(proc_wait_ticks[idx], 0, sizeof(proc_wait_ticks[idx]));
             }
@@ -487,7 +488,6 @@ void scheduler(void)
     release(&ptable.lock);
   }
 }
-
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
@@ -671,10 +671,12 @@ void procdump(void)
   }
 }
 
-struct proc* find_proc_by_pid(int pid) {
+struct proc *find_proc_by_pid(int pid)
+{
   struct proc *p;
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    if(p->pid == pid)
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if (p->pid == pid)
       return p;
   }
   return 0;

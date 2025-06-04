@@ -260,6 +260,32 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 // newsz.  oldsz and newsz need not be page-aligned, nor does newsz
 // need to be less than oldsz.  oldsz can be larger than the actual
 // process size.  Returns the new process size.
+// int
+// deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+// {
+//   pte_t *pte;
+//   uint a, pa;
+
+//   if(newsz >= oldsz)
+//     return oldsz;
+
+//   a = PGROUNDUP(newsz);
+//   for(; a  < oldsz; a += PGSIZE){
+//     pte = walkpgdir(pgdir, (char*)a, 0);
+//     if(!pte)
+//       a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
+//     else if((*pte & PTE_P) != 0){
+//       pa = PTE_ADDR(*pte);
+//       if(pa == 0)
+//         panic("kfree");
+//       char *v = P2V(pa);
+//       kfree(v);
+//       *pte = 0;
+//     }
+//   }
+//   return newsz;
+// }
+
 int
 deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
@@ -269,12 +295,14 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   if(newsz >= oldsz)
     return oldsz;
 
-  a = PGROUNDUP(newsz);
-  for(; a  < oldsz; a += PGSIZE){
+  a = PGROUNDDOWN(newsz); // 0이면 0에서 시작!
+  for(; a < oldsz; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
+    // 기존: if(!pte) a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
+    // 수정: 무조건 4KB 단위로 꼼꼼히 돌기!
     if(!pte)
-      a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
-    else if((*pte & PTE_P) != 0){
+      continue; // 4KB 단위로 반드시 다 체크
+    if((*pte & PTE_P) != 0){
       pa = PTE_ADDR(*pte);
       if(pa == 0)
         panic("kfree");
@@ -285,6 +313,8 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   }
   return newsz;
 }
+
+
 
 // Free a page table and all the physical memory pages
 // in the user part.
