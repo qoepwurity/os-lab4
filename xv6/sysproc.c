@@ -14,7 +14,6 @@ extern int proc_ticks[NPROC][4];
 extern int proc_wait_ticks[NPROC][4];
 
 struct proc* find_proc_by_pid(int pid);
-//void print_user_page_table(struct proc *p);
 pte_t *walkpgdir(pde_t *pgdir, const void *va, int alloc);
 
 extern struct {
@@ -71,7 +70,8 @@ sys_getpid(void)
 //   return addr;
 // }
 
-int sys_sbrk(void) {
+int 
+sys_sbrk(void) {
   int addr;
   int n;
   struct proc *curproc = myproc();
@@ -213,7 +213,7 @@ void print_user_page_table(struct proc *p) {
   cprintf("END PAGE TABLE\n");
 }
 
-int 
+int
 sys_printpt(void) {
   int pid;
   if(argint(0, &pid) < 0)

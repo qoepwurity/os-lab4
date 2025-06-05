@@ -109,11 +109,11 @@ void trap(struct trapframe *tf)
       break;
     }
 
-    // pte_t *pte = walkpgdir(p->pgdir, (char *)va, 0);
-    // if (pte && (*pte & PTE_P)) {
-    //     p->killed = 1;
-    //     break;
-    // }
+    pte_t *pte = walkpgdir(p->pgdir, (char *)va, 0);
+    if (pte && (*pte & PTE_P)) {
+        p->killed = 1;
+        break;
+    }
 
     // pte_t *pte = walkpgdir(p->pgdir, (char *)va, 0);
     // if (!pte || (*pte & PTE_P)) {
@@ -121,17 +121,17 @@ void trap(struct trapframe *tf)
     //     break;
     // }
 
-    pte_t *pte = walkpgdir(p->pgdir, (char *)va, 0);
-    if (!pte)
-    {
-      p->killed = 1;
-      break;
-    }
-    if (*pte & PTE_P)
-    {
-      p->killed = 1;
-      break;
-    }
+    // pte_t *pte = walkpgdir(p->pgdir, (char *)va, 0);
+    // if (!pte)
+    // {
+    //   p->killed = 1;
+    //   break;
+    // }
+    // if (*pte & PTE_P)
+    // {
+    //   p->killed = 1;
+    //   break;
+    // }
 
     char *mem = kalloc();
     if (mem == 0)
